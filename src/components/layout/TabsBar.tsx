@@ -43,10 +43,10 @@ export const TabsBar: React.FC = () => {
           key={tab.id}
           onClick={() => setActiveTab(tab.id)}
           onDoubleClick={(e) => handleDoubleClick(e, tab.id, tab.title)}
-          className={`group flex items-center h-full px-4 min-w-[140px] max-w-[200px] border-r border-[#1e1e1e] cursor-pointer hover:bg-[var(--color-bg-hover)] transition-colors ${
+          className={`group flex items-center h-full px-4 min-w-[140px] max-w-[200px] border-r border-[var(--color-border)] cursor-pointer hover:bg-[var(--color-bg-hover)] transition-colors ${
             activeTabId === tab.id
-              ? 'bg-[var(--color-bg-editor)] text-blue-400 border-t-2 border-t-blue-500'
-              : 'bg-[#181818] text-[#8b949e] border-t-2 border-t-transparent'
+              ? 'bg-[var(--color-bg-editor)] text-blue-500 font-medium border-t-2 border-t-blue-500'
+              : 'bg-[var(--color-bg-header)] text-[var(--color-text-muted)] border-t-2 border-t-transparent'
           }`}
         >
           <FileText className="w-4 h-4 mr-2 flex-shrink-0" />
@@ -72,8 +72,8 @@ export const TabsBar: React.FC = () => {
               e.stopPropagation();
               closeTab(tab.id);
             }}
-            className={`p-1 rounded-sm ml-2 flex-shrink-0 ${
-              activeTabId === tab.id ? 'opacity-100 hover:bg-[#2d2d2d]' : 'opacity-0 group-hover:opacity-100 hover:bg-[#2d2d2d]'
+            className={`p-1 rounded-sm ml-2 flex-shrink-0 transition-opacity ${
+              activeTabId === tab.id ? 'opacity-100 hover:bg-[var(--color-bg-main)]' : 'opacity-0 group-hover:opacity-100 hover:bg-[var(--color-bg-main)]'
             }`}
           >
             <X className="w-3 h-3" />
@@ -82,7 +82,7 @@ export const TabsBar: React.FC = () => {
       ))}
       <button
         onClick={addTab}
-        className="h-full px-3 flex items-center justify-center text-[#8b949e] hover:text-white hover:bg-[var(--color-bg-hover)] transition-colors"
+        className="h-full px-3 flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-hover)] transition-colors"
       >
         <Plus className="w-4 h-4" />
       </button>

@@ -31,7 +31,19 @@ export const CodeEditor: React.FC = () => {
     return exts;
   }, [vimMode, wordWrap]);
 
-  const editorTheme = theme === 'light' ? githubLight : githubDark;
+  const [isSystemDark, setIsSystemDark] = React.useState(
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
+
+  React.useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e: MediaQueryListEvent) => setIsSystemDark(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
+
+  const effectiveTheme = theme === 'system' ? (isSystemDark ? 'dark' : 'light') : theme;
+  const editorTheme = effectiveTheme === 'light' ? githubLight : githubDark;
 
   useEffect(() => {
     let timer: NodeJS.Timeout;

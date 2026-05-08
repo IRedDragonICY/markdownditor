@@ -6,6 +6,7 @@
 import React, { useEffect } from 'react';
 import { Panel, Group, Separator } from 'react-resizable-panels';
 import { useMarkdownStore } from './store/useMarkdownStore';
+import { useSettingsStore } from './store/useSettingsStore';
 import { Header } from './components/layout/Header';
 import { TabsBar } from './components/layout/TabsBar';
 import { EditorToolbar } from './components/editor/EditorToolbar';
@@ -51,12 +52,12 @@ const HelpModal = () => {
         <div className="p-4 space-y-4 text-[var(--color-text-muted)] max-h-[60vh] overflow-auto">
           <p>Keyboard shortcuts are supported natively by the editor:</p>
           <ul className="space-y-2">
-            <li><kbd className="px-1.5 py-0.5 bg-[#1e1e1e] border border-[#30363d] rounded text-[#c9d1d9] text-xs">Ctrl/Cmd + B</kbd> Bold</li>
-            <li><kbd className="px-1.5 py-0.5 bg-[#1e1e1e] border border-[#30363d] rounded text-[#c9d1d9] text-xs">Ctrl/Cmd + I</kbd> Italic</li>
-            <li><kbd className="px-1.5 py-0.5 bg-[#1e1e1e] border border-[#30363d] rounded text-[#c9d1d9] text-xs">Ctrl/Cmd + F</kbd> Find</li>
-            <li><kbd className="px-1.5 py-0.5 bg-[#1e1e1e] border border-[#30363d] rounded text-[#c9d1d9] text-xs">Esc</kbd> Close Search / Modals</li>
+            <li><kbd className="px-1.5 py-0.5 bg-[var(--color-bg-editor)] border border-[var(--color-border)] rounded text-[var(--color-text-main)] text-xs">Ctrl/Cmd + B</kbd> Bold</li>
+            <li><kbd className="px-1.5 py-0.5 bg-[var(--color-bg-editor)] border border-[var(--color-border)] rounded text-[var(--color-text-main)] text-xs">Ctrl/Cmd + I</kbd> Italic</li>
+            <li><kbd className="px-1.5 py-0.5 bg-[var(--color-bg-editor)] border border-[var(--color-border)] rounded text-[var(--color-text-main)] text-xs">Ctrl/Cmd + F</kbd> Find</li>
+            <li><kbd className="px-1.5 py-0.5 bg-[var(--color-bg-editor)] border border-[var(--color-border)] rounded text-[var(--color-text-main)] text-xs">Esc</kbd> Close Search / Modals</li>
           </ul>
-          <p className="border-t border-[#30363d] pt-3">
+          <p className="border-t border-[var(--color-border)] pt-3">
             <strong>Markdown Alerts</strong><br/>
             You can use GitHub-style alerts in your markdown:<br/>
             <code>{'> [!NOTE]'}</code><br/>
@@ -76,6 +77,29 @@ const HelpModal = () => {
 
 export default function App() {
   const { viewMode, addFileTab, tabs, activeTabId, updateTab } = useMarkdownStore();
+  const theme = useSettingsStore(state => state.theme);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const applyTheme = () => {
+      if (theme === 'system') {
+        const systemTheme = mediaQuery.matches ? 'dark' : 'light';
+        root.setAttribute('data-theme', systemTheme);
+        root.classList.remove('light', 'dark');
+        root.classList.add(systemTheme);
+      } else {
+        root.setAttribute('data-theme', theme);
+        root.classList.remove('light', 'dark');
+        root.classList.add(theme);
+      }
+    };
+
+    applyTheme();
+    mediaQuery.addEventListener('change', applyTheme);
+    return () => mediaQuery.removeEventListener('change', applyTheme);
+  }, [theme]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -168,14 +192,10 @@ export default function App() {
       </main>
 
       <footer className="h-6 border-t border-[var(--color-border)] bg-[var(--color-bg-editor)] flex items-center px-3 justify-between shrink-0">
-        <div className="flex items-center gap-4 text-[10px] text-[#484f58]">
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-            Ready
-          </div>
+        <div className="flex items-center gap-4 text-[10px] text-[var(--color-text-muted)]">
           <span>Line 1, Column 1</span>
         </div>
-        <div className="flex items-center gap-4 text-[10px] text-[#484f58] uppercase">
+        <div className="flex items-center gap-4 text-[10px] text-[var(--color-text-muted)] uppercase">
           <span>UTF-8</span>
           <span>Markdown</span>
         </div>

@@ -3,14 +3,102 @@
 @plugin "@tailwindcss/typography";
 
 @theme {
-  --color-bg-main: #0d1117;
-  --color-bg-header: #161b22;
-  --color-bg-editor: #010409;
-  --color-bg-hover: #21262d;
-  --color-border: #30363d;
-  --color-text-main: #c9d1d9;
-  --color-text-muted: #8b949e;
-  --color-accent: #58a6ff;
+  --color-bg-main: var(--bg-main);
+  --color-bg-header: var(--bg-header);
+  --color-bg-editor: var(--bg-editor);
+  --color-bg-hover: var(--bg-hover);
+  --color-border: var(--border-color);
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent);
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+/* Default to dark mode colors */
+:root {
+  --bg-main: #0d1117;
+  --bg-header: #161b22;
+  --bg-editor: #010409;
+  --bg-hover: #21262d;
+  --border-color: #30363d;
+  --text-main: #c9d1d9;
+  --text-muted: #8b949e;
+  --accent: #58a6ff;
+  
+  /* syntax highlighting */
+  --sh-keyword: #ff7b72;
+  --sh-entity: #d2a8ff;
+  --sh-constant: #79c0ff;
+  --sh-string: #a5d6ff;
+  --sh-variable: #ffa657;
+  --sh-comment: #8b949e;
+  --sh-tag: #7ee787;
+  --sh-subst: #c9d1d9;
+  --sh-heading: #1f6feb;
+  --sh-list: #f2cc60;
+  --sh-addition: #aff5b4;
+  --sh-addition-bg: #033a16;
+  --sh-deletion: #ffdcd7;
+  --sh-deletion-bg: #67060c;
+}
+
+:root[data-theme="light"], .light {
+  --bg-main: #ffffff;
+  --bg-header: #f6f8fa;
+  --bg-editor: #ffffff;
+  --bg-hover: #f3f4f6;
+  --border-color: #d0d7de;
+  --text-main: #24292f;
+  --text-muted: #57606a;
+  --accent: #0969da;
+  color-scheme: light;
+  
+  /* syntax highlighting (light) */
+  --sh-keyword: #d73a49;
+  --sh-entity: #6f42c1;
+  --sh-constant: #005cc5;
+  --sh-string: #032f62;
+  --sh-variable: #e36209;
+  --sh-comment: #6a737d;
+  --sh-tag: #22863a;
+  --sh-subst: #24292e;
+  --sh-heading: #005cc5;
+  --sh-list: #735c0f;
+  --sh-addition: #22863a;
+  --sh-addition-bg: #f0fff4;
+  --sh-deletion: #b31d28;
+  --sh-deletion-bg: #ffeef0;
+}
+
+:root[data-theme="dark"], .dark {
+  --bg-main: #0d1117;
+  --bg-header: #161b22;
+  --bg-editor: #010409;
+  --bg-hover: #21262d;
+  --border-color: #30363d;
+  --text-main: #c9d1d9;
+  --text-muted: #8b949e;
+  --accent: #58a6ff;
+  color-scheme: dark;
+  
+  /* syntax highlighting (dark) */
+  --sh-keyword: #ff7b72;
+  --sh-entity: #d2a8ff;
+  --sh-constant: #79c0ff;
+  --sh-string: #a5d6ff;
+  --sh-variable: #ffa657;
+  --sh-comment: #8b949e;
+  --sh-tag: #7ee787;
+  --sh-subst: #c9d1d9;
+  --sh-heading: #1f6feb;
+  --sh-list: #f2cc60;
+  --sh-addition: #aff5b4;
+  --sh-addition-bg: #033a16;
+  --sh-deletion: #ffdcd7;
+  --sh-deletion-bg: #67060c;
 }
 
 ::-webkit-scrollbar {
@@ -18,20 +106,34 @@
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-bg-main); 
+  background: var(--bg-main); 
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border); 
+  background: var(--border-color); 
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted); 
+  background: var(--text-muted); 
 }
 
-:root {
-  color-scheme: dark;
-}
 body {
-  background-color: var(--color-bg-main);
-  color: var(--color-text-main);
+  background-color: var(--bg-main);
+  color: var(--text-main);
 }
+
+.hljs { color: var(--text-main); }
+.hljs-doctag, .hljs-keyword, .hljs-meta .hljs-keyword, .hljs-template-tag, .hljs-template-variable, .hljs-type, .hljs-variable.language_ { color: var(--sh-keyword); }
+.hljs-title, .hljs-title.class_, .hljs-title.class_.inherited__, .hljs-title.function_ { color: var(--sh-entity); }
+.hljs-attr, .hljs-attribute, .hljs-literal, .hljs-meta, .hljs-number, .hljs-operator, .hljs-variable, .hljs-selector-attr, .hljs-selector-class, .hljs-selector-id { color: var(--sh-constant); }
+.hljs-regexp, .hljs-string, .hljs-meta .hljs-string { color: var(--sh-string); }
+.hljs-built_in, .hljs-symbol { color: var(--sh-variable); }
+.hljs-comment, .hljs-code, .hljs-formula { color: var(--sh-comment); }
+.hljs-name, .hljs-quote, .hljs-selector-tag, .hljs-selector-pseudo { color: var(--sh-tag); }
+.hljs-subst { color: var(--sh-subst); }
+.hljs-section { color: var(--sh-heading); font-weight: bold; }
+.hljs-bullet { color: var(--sh-list); }
+.hljs-emphasis { color: var(--text-main); font-style: italic; }
+.hljs-strong { color: var(--text-main); font-weight: bold; }
+.hljs-addition { color: var(--sh-addition); background-color: var(--sh-addition-bg); }
+.hljs-deletion { color: var(--sh-deletion); background-color: var(--sh-deletion-bg); }
+
