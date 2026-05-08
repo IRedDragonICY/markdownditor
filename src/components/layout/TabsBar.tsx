@@ -37,7 +37,7 @@ export const TabsBar: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center h-10 bg-[var(--color-bg-deep)] border-b border-[var(--color-border)] overflow-x-auto overflow-y-hidden no-scrollbar">
+    <div className="flex items-center h-10 bg-[var(--color-bg-header)] border-b border-[var(--color-border)] overflow-x-auto overflow-y-hidden no-scrollbar">
       {tabs.map((tab) => (
         <div
           key={tab.id}
@@ -62,7 +62,10 @@ export const TabsBar: React.FC = () => {
               onDoubleClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <span className="truncate text-sm flex-1">{tab.title}</span>
+            <span className="truncate text-sm flex-1">
+              {tab.isDirty && <span className="mr-1 text-yellow-500">•</span>}
+              {tab.title}
+            </span>
           )}
           <button
             onClick={(e) => {

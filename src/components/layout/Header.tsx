@@ -1,9 +1,11 @@
 import React from 'react';
 import { useMarkdownStore } from '../../store/useMarkdownStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
 import { Maximize2, Settings, ArrowDownUp } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { tabs, activeTabId, viewMode, setViewMode, syncScroll, setSyncScroll } = useMarkdownStore();
+  const setShowSettings = useSettingsStore(s => s.setShowSettings);
   
   const activeTab = tabs.find(t => t.id === activeTabId);
   const content = activeTab ? activeTab.content : '';
@@ -72,7 +74,7 @@ export const Header: React.FC = () => {
         <button className="p-2 text-[var(--color-text-muted)] hover:text-white hover:bg-[var(--color-bg-hover)] rounded-md transition-colors" title="Toggle Fullscreen">
           <Maximize2 className="w-4 h-4" />
         </button>
-        <button className="p-2 text-[var(--color-text-muted)] hover:text-white hover:bg-[var(--color-bg-hover)] rounded-md transition-colors" title="Settings">
+        <button className="p-2 text-[var(--color-text-muted)] hover:text-white hover:bg-[var(--color-bg-hover)] rounded-md transition-colors" title="Settings" onClick={() => setShowSettings(true)}>
           <Settings className="w-4 h-4" />
         </button>
       </div>

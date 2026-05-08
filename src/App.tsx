@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Panel, Group, Separator } from 'react-resizable-panels';
 import { useMarkdownStore } from './store/useMarkdownStore';
 import { Header } from './components/layout/Header';
@@ -11,13 +11,16 @@ import { TabsBar } from './components/layout/TabsBar';
 import { EditorToolbar } from './components/editor/EditorToolbar';
 import { CodeEditor } from './components/editor/CodeEditor';
 import { MarkdownPreview } from './components/preview/MarkdownPreview';
+import { CodeExtractorModal } from './components/preview/CodeExtractorModal';
+import { SettingsModal } from './components/layout/SettingsModal';
+import { saveFile, saveFileAs } from './utils/fileSystem';
 
 const InfoModal = () => {
   const { showInfo, setShowInfo } = useMarkdownStore();
   if (!showInfo) return null;
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowInfo(false)}>
-      <div className="bg-[var(--color-bg-deep)] border border-[var(--color-border)] rounded-lg shadow-xl w-full max-w-md overflow-hidden text-sm" onClick={e => e.stopPropagation()}>
+      <div className="bg-[var(--color-bg-main)] border border-[var(--color-border)] rounded-lg shadow-xl w-full max-w-md overflow-hidden text-sm" onClick={e => e.stopPropagation()}>
         <div className="px-4 py-3 border-b border-[var(--color-border)] font-semibold flex items-center justify-between bg-[var(--color-bg-header)]">
           <span>About markdownditor</span>
           <button onClick={() => setShowInfo(false)} className="text-[var(--color-text-muted)] hover:text-white">&times;</button>
@@ -40,7 +43,7 @@ const HelpModal = () => {
   if (!showHelp) return null;
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowHelp(false)}>
-      <div className="bg-[var(--color-bg-deep)] border border-[var(--color-border)] rounded-lg shadow-xl w-full max-w-lg overflow-hidden text-sm" onClick={e => e.stopPropagation()}>
+      <div className="bg-[var(--color-bg-main)] border border-[var(--color-border)] rounded-lg shadow-xl w-full max-w-lg overflow-hidden text-sm" onClick={e => e.stopPropagation()}>
         <div className="px-4 py-3 border-b border-[var(--color-border)] font-semibold flex items-center justify-between bg-[var(--color-bg-header)]">
           <span>Help & Shortcuts</span>
           <button onClick={() => setShowHelp(false)} className="text-[var(--color-text-muted)] hover:text-white">&times;</button>
@@ -72,10 +75,64 @@ const HelpModal = () => {
 };
 
 export default function App() {
-  const { viewMode } = useMarkdownStore();
+  const { viewMode, addFileTab, tabs, activeTabId, updateTab } = useMarkdownStore();
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer.items) {
+      for (let i = 0; i < e.dataTransfer.items.length; i++) {
+        if (e.dataTransfer.items[i].kind === 'file') {
+          const file = e.dataTransfer.items[i].getAsFile();
+          if (file && (file.name.endsWith('.md') || file.name.endsWith('.txt'))) {
+            const content = await file.text();
+            addFileTab(file.name, content);
+          }
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        const activeTab = useMarkdownStore.getState().tabs.find(t => t.id === useMarkdownStore.getState().activeTabId);
+        if (!activeTab) return;
+        
+        try {
+          if (activeTab.fileHandle) {
+            await saveFile(activeTab.fileHandle, activeTab.content);
+            useMarkdownStore.getState().updateTab(activeTab.id, { isDirty: false });
+          } else {
+            const result = await saveFileAs(activeTab.content, activeTab.title);
+            if (result) {
+              useMarkdownStore.getState().updateTab(activeTab.id, { 
+                title: result.name, 
+                fileHandle: result.handle,
+                isDirty: false 
+              });
+            }
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-[var(--color-bg-main)] text-[var(--color-text-main)] font-sans">
+    <div 
+      className="flex flex-col h-screen overflow-hidden bg-[var(--color-bg-main)] text-[var(--color-text-main)] font-sans"
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       <Header />
       <TabsBar />
       
@@ -125,6 +182,8 @@ export default function App() {
       </footer>
       <HelpModal />
       <InfoModal />
+      <CodeExtractorModal />
+      <SettingsModal />
     </div>
   );
 }

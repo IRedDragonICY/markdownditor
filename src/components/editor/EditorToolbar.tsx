@@ -1,5 +1,6 @@
 import React from 'react';
 import { useMarkdownStore } from '../../store/useMarkdownStore';
+import { openFile, saveFile, saveFileAs } from '../../utils/fileSystem';
 import {
   Undo2, Redo2, Eraser,
   Bold, Strikethrough, Italic, Quote, CaseLower, CaseUpper, Type,
@@ -8,20 +9,22 @@ import {
   List, ListOrdered, Minus,
   Link, Square, Image, Code, FileCode2, Terminal, Table,
   Clock, Smile, Copyright, MessageSquareWarning,
-  Maximize, Search, HelpCircle, Info
+  Maximize, Search, HelpCircle, Info, Archive, Save, FolderOpen
 } from 'lucide-react';
 
 interface ToolbarButtonProps {
   icon: React.ReactNode;
   label: string;
-  onClick: () => void;
+  onClick?: () => void;
+  disabled?: boolean;
 }
 
-const ToolbarButton: React.FC<ToolbarButtonProps> = ({ icon, label, onClick }) => (
+const ToolbarButton: React.FC<ToolbarButtonProps> = ({ icon, label, onClick, disabled }) => (
   <button
     onClick={onClick}
-    className="p-1.5 hover:bg-[var(--color-bg-hover)] rounded text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors tooltip tooltip-bottom before:text-xs z-20"
-    data-tip={label}
+    disabled={disabled}
+    className={`p-1.5 rounded transition-colors shrink-0 ${disabled ? 'opacity-50 cursor-not-allowed text-[var(--color-text-muted)]' : 'hover:bg-[var(--color-bg-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-accent)]'}`}
+    title={label}
     aria-label={label}
   >
     {icon}
@@ -29,7 +32,8 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({ icon, label, onClick }) =
 );
 
 export const EditorToolbar: React.FC = () => {
-  const { insertTextAtCursor, triggerSearch, setShowHelp, setShowInfo } = useMarkdownStore();
+  const { insertTextAtCursor, triggerSearch, setShowHelp, setShowInfo, setShowCodeExtractor, addFileTab, tabs, activeTabId, updateTab, triggerUndo, triggerRedo } = useMarkdownStore();
+  const activeTab = tabs.find(t => t.id === activeTabId);
 
   const handleFormat = (prefix: string, suffix: string = '', block: boolean = false) => {
     insertTextAtCursor({ prefix, suffix, block });
@@ -47,10 +51,52 @@ export const EditorToolbar: React.FC = () => {
     }
   };
 
+  const handleOpen = async () => {
+    try {
+      const result = await openFile();
+      if (result) {
+        addFileTab(result.name, result.content, result.handle);
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Failed to open file');
+    }
+  };
+
+  const handleSave = async () => {
+    if (!activeTab) return;
+    try {
+      if (activeTab.fileHandle) {
+        await saveFile(activeTab.fileHandle, activeTab.content);
+        updateTab(activeTab.id, { isDirty: false });
+      } else {
+        const result = await saveFileAs(activeTab.content, activeTab.title);
+        if (result) {
+          updateTab(activeTab.id, { 
+            title: result.name, 
+            fileHandle: result.handle,
+            isDirty: false 
+          });
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Failed to save file');
+    }
+  };
+
   return (
     <nav className="h-10 border-b border-[var(--color-border)] bg-[var(--color-bg-main)] flex items-center px-1 gap-[1px] shrink-0 overflow-x-auto no-scrollbar">
-      <ToolbarButton icon={<Undo2 className="w-4 h-4" />} label="Undo" onClick={() => {}} />
-      <ToolbarButton icon={<Redo2 className="w-4 h-4" />} label="Redo" onClick={() => {}} />
+      <ToolbarButton icon={<FolderOpen className="w-4 h-4" />} label="Open File" onClick={handleOpen} />
+      <ToolbarButton 
+        icon={<Save className="w-4 h-4" />} 
+        label={activeTab?.isDirty ? "Save (Unsaved Changes)" : "Save"} 
+        onClick={handleSave} 
+      />
+      <div className="h-4 w-[1px] bg-[var(--color-border)] mx-1 shrink-0" />
+      
+      <ToolbarButton icon={<Undo2 className="w-4 h-4" />} label="Undo" onClick={() => triggerUndo()} />
+      <ToolbarButton icon={<Redo2 className="w-4 h-4" />} label="Redo" onClick={() => triggerRedo()} />
       <ToolbarButton icon={<Eraser className="w-4 h-4" />} label="Clear Formatting" onClick={() => {}} />
       
       <div className="h-4 w-[1px] bg-[var(--color-border)] mx-1 shrink-0" />
@@ -107,6 +153,7 @@ export const EditorToolbar: React.FC = () => {
       
       <ToolbarButton icon={<Maximize className="w-4 h-4" />} label="Toggle Fullscreen" onClick={handleToggleFullscreen} />
       <ToolbarButton icon={<Search className="w-4 h-4" />} label="Search" onClick={() => triggerSearch()} />
+      <ToolbarButton icon={<Archive className="w-4 h-4" />} label="Extract Codeblocks" onClick={() => setShowCodeExtractor(true)} />
       <ToolbarButton icon={<HelpCircle className="w-4 h-4" />} label="Help" onClick={() => setShowHelp(true)} />
       <ToolbarButton icon={<Info className="w-4 h-4" />} label="Info" onClick={() => setShowInfo(true)} />
     </nav>

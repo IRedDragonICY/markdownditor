@@ -7,6 +7,7 @@ import 'highlight.js/styles/github-dark.css';
 import { useMarkdownStore } from '../../store/useMarkdownStore';
 import { scrollSync, handlePreviewScroll } from '../../utils/scrollSync';
 import { Check, Copy, Info, AlertTriangle, Lightbulb, Flame, AlertCircle } from 'lucide-react';
+import remarkGitHubAlerts from '../../utils/remarkGitHubAlerts';
 
 const rehypeParseCodeMeta = () => {
   return (tree: any) => {
@@ -97,87 +98,6 @@ const PreBlock = ({ children, node, ...props }: any) => {
   );
 };
 
-const BlockquoteBlock = ({ children, ...props }: any) => {
-  // Try to find if this is an alert block
-  let alertType = null;
-  let title = '';
-  
-  // ReactMarkdown passes the children as an array of elements or text.
-  // The first child of a blockquote is usually a paragraph.
-  let firstParagraphText = '';
-  if (Array.isArray(children)) {
-    const p = children.find(child => React.isValidElement(child) && child.type === 'p');
-    if (p && p.props && p.props.children) {
-      const pChildren = Array.isArray(p.props.children) ? p.props.children : [p.props.children];
-      if (typeof pChildren[0] === 'string') {
-        firstParagraphText = pChildren[0];
-      }
-    }
-  } else if (React.isValidElement(children) && children.type === 'p') {
-    const props = children.props as any;
-    const pChildren = Array.isArray(props.children) ? props.children : [props.children];
-    if (typeof pChildren[0] === 'string') {
-      firstParagraphText = pChildren[0];
-    }
-  }
-
-  const alertMap: Record<string, { icon: any, color: string, titleColor: string }> = {
-    '[!NOTE]': { icon: Info, color: 'border-blue-500 bg-blue-500/10', titleColor: 'text-blue-500' },
-    '[!TIP]': { icon: Lightbulb, color: 'border-green-500 bg-green-500/10', titleColor: 'text-green-500' },
-    '[!IMPORTANT]': { icon: AlertCircle, color: 'border-purple-500 bg-purple-500/10', titleColor: 'text-purple-500' },
-    '[!WARNING]': { icon: AlertTriangle, color: 'border-yellow-500 bg-yellow-500/10', titleColor: 'text-yellow-500' },
-    '[!CAUTION]': { icon: Flame, color: 'border-red-500 bg-red-500/10', titleColor: 'text-red-500' }
-  };
-
-  for (const key in alertMap) {
-    if (firstParagraphText.startsWith(key)) {
-      alertType = key;
-      title = key.replace(/\[!|\]/g, '');
-      title = title.charAt(0).toUpperCase() + title.slice(1).toLowerCase();
-      break;
-    }
-  }
-
-  if (alertType) {
-    const { icon: Icon, color, titleColor } = alertMap[alertType as string];
-    
-    // We need to strip the alertType from the first paragraph
-    const modifiedChildren = React.Children.map(children, child => {
-      if (React.isValidElement(child) && child.type === 'p') {
-        const props = child.props as any;
-        const pChildren = Array.isArray(props.children) ? [...props.children] : [props.children];
-        if (typeof pChildren[0] === 'string' && pChildren[0].startsWith(alertType)) {
-          pChildren[0] = pChildren[0].substring(alertType.length).trimStart();
-          if (pChildren[0].startsWith('\n')) {
-             pChildren[0] = pChildren[0].substring(1);
-          }
-          if (pChildren[0] === '' && pChildren.length === 1) return null; // Remove empty paragraph
-        }
-        return React.cloneElement(child, child.props, ...pChildren);
-      }
-      return child;
-    });
-
-    return (
-      <div className={`mt-4 mb-4 border-l-4 px-4 py-2 rounded-r-md ${color}`}>
-        <div className={`flex items-center gap-2 mb-2 font-semibold ${titleColor}`}>
-          <Icon className="w-4 h-4" />
-          <span>{title}</span>
-        </div>
-        <div className="text-[var(--color-text-main)] overflow-hidden">
-          {modifiedChildren}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <blockquote {...props} className="border-l-4 border-[var(--color-border)] pl-4 italic text-[var(--color-text-muted)] my-4">
-      {children}
-    </blockquote>
-  );
-};
-
 export const MarkdownPreview: React.FC = () => {
   const { tabs, activeTabId, setContent } = useMarkdownStore();
   const activeTab = tabs.find(t => t.id === activeTabId);
@@ -199,13 +119,12 @@ export const MarkdownPreview: React.FC = () => {
       onScroll={handlePreviewScroll as any}
       className="h-full w-full overflow-y-auto px-10 py-10"
     >
-      <article className="prose prose-invert max-w-none w-full prose-headings:border-b-0 prose-h1:border-b prose-h1:border-[var(--color-border)] prose-h1:pb-2 prose-h1:text-3xl prose-h1:font-bold prose-h2:text-xl prose-h2:font-semibold prose-h2:mt-8 prose-h2:mb-4 prose-p:text-[#8b949e] prose-p:leading-relaxed prose-li:text-[#8b949e] prose-code:bg-[var(--color-border)] prose-code:px-1 prose-code:rounded prose-code:text-[#79c0ff] prose-code:before:content-none prose-code:after:content-none prose-pre:p-0 prose-pre:bg-transparent prose-pre:border-none prose-pre:rounded-none prose-th:border prose-th:border-[var(--color-border)] prose-th:px-4 prose-th:py-2 prose-th:bg-[var(--color-bg-header)] prose-td:border prose-td:border-[var(--color-border)] prose-td:px-4 prose-td:py-2 prose-td:text-sm prose-th:text-sm prose-td:text-[#8b949e]">
+      <article className="prose prose-invert max-w-none w-full prose-headings:border-b-0 prose-h1:border-b prose-h1:border-[var(--color-border)] prose-h1:pb-2 prose-h1:text-3xl prose-h1:font-bold prose-h2:text-xl prose-h2:font-semibold prose-h2:mt-8 prose-h2:mb-4 prose-p:text-[#8b949e] prose-p:leading-relaxed prose-li:text-[#8b949e] prose-code:bg-[var(--color-border)] prose-code:px-1 prose-code:rounded prose-code:text-[#79c0ff] prose-code:before:content-none prose-code:after:content-none prose-pre:p-0 prose-pre:bg-transparent prose-pre:border-none prose-pre:rounded-none prose-th:border prose-th:border-[var(--color-border)] prose-th:px-4 prose-th:py-2 prose-th:bg-[var(--color-bg-header)] prose-td:border prose-td:border-[var(--color-border)] prose-td:px-4 prose-td:py-2 prose-td:text-sm prose-th:text-sm prose-td:text-[#8b949e] prose-blockquote:border-l-4 prose-blockquote:border-[var(--color-border)] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-[var(--color-text-muted)] prose-blockquote:my-4">
         <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
+          remarkPlugins={[remarkGfm, remarkGitHubAlerts]}
           rehypePlugins={[rehypeParseCodeMeta, rehypeHighlight]}
           components={{
             pre: PreBlock,
-            blockquote: BlockquoteBlock,
             input: ({ node, ...props }) => {
               if (props.type === 'checkbox') {
                 const { checked, disabled, ...rest } = props;

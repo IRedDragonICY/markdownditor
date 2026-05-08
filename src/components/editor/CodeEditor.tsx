@@ -1,17 +1,37 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import CodeMirror, { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
-import { githubDark } from '@uiw/codemirror-theme-github';
+import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
 import { openSearchPanel } from '@codemirror/search';
+import { EditorView } from '@codemirror/view';
+import { vim } from '@replit/codemirror-vim';
+import { Extension } from '@codemirror/state';
+import { undo, redo } from '@codemirror/commands';
 import { useMarkdownStore } from '../../store/useMarkdownStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
 import { scrollSync, handleEditorScroll } from '../../utils/scrollSync';
 
 export const CodeEditor: React.FC = () => {
-  const { tabs, activeTabId, setContent, formatTrigger, searchTrigger } = useMarkdownStore();
+  const { tabs, activeTabId, setContent, formatTrigger, searchTrigger, undoTrigger, redoTrigger } = useMarkdownStore();
+  const { vimMode, wordWrap, lineNumbers, theme } = useSettingsStore();
+
   const activeTab = tabs.find(t => t.id === activeTabId);
   const content = activeTab ? activeTab.content : '';
   const editorRef = useRef<ReactCodeMirrorRef>(null);
+
+  const extensions = useMemo(() => {
+    const exts: Extension[] = [markdown({ base: markdownLanguage, codeLanguages: languages })];
+    if (vimMode) {
+      exts.push(vim());
+    }
+    if (wordWrap) {
+      exts.push(EditorView.lineWrapping);
+    }
+    return exts;
+  }, [vimMode, wordWrap]);
+
+  const editorTheme = theme === 'light' ? githubLight : githubDark;
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -77,20 +97,28 @@ export const CodeEditor: React.FC = () => {
     openSearchPanel(editorRef.current.view);
   }, [searchTrigger]);
 
+  useEffect(() => {
+    if (!undoTrigger || !editorRef.current?.view) return;
+    undo(editorRef.current.view);
+  }, [undoTrigger]);
+
+  useEffect(() => {
+    if (!redoTrigger || !editorRef.current?.view) return;
+    redo(editorRef.current.view);
+  }, [redoTrigger]);
+
   return (
-    <div className="h-full w-full overflow-hidden flex flex-col bg-[var(--color-bg-deep)]">
+    <div className="h-full w-full overflow-hidden flex flex-col bg-[var(--color-bg-editor)]">
       <CodeMirror
         ref={editorRef}
         value={content}
         height="100%"
-        theme={githubDark}
-        extensions={[
-          markdown({ base: markdownLanguage, codeLanguages: languages })
-        ]}
+        theme={editorTheme}
+        extensions={extensions}
         onChange={(value) => setContent(value)}
         className="flex-1 overflow-auto text-base editor-container"
         basicSetup={{
-          lineNumbers: true,
+          lineNumbers: lineNumbers,
           highlightActiveLineGutter: true,
           foldGutter: true,
           dropCursor: true,

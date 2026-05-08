@@ -12,6 +12,8 @@ export interface TabData {
   id: string;
   title: string;
   content: string;
+  fileHandle?: any;
+  isDirty?: boolean;
 }
 
 interface MarkdownState {
@@ -21,19 +23,27 @@ interface MarkdownState {
   syncScroll: boolean;
   formatTrigger: { timestamp: number; payload: FormatActionPayload } | null;
   searchTrigger: number | null;
+  undoTrigger: number | null;
+  redoTrigger: number | null;
   showHelp: boolean;
   showInfo: boolean;
+  showCodeExtractor: boolean;
   setContent: (content: string) => void;
   setViewMode: (mode: ViewMode) => void;
   setSyncScroll: (sync: boolean) => void;
   insertTextAtCursor: (payload: FormatActionPayload) => void;
   triggerSearch: () => void;
+  triggerUndo: () => void;
+  triggerRedo: () => void;
   setShowHelp: (show: boolean) => void;
   setShowInfo: (show: boolean) => void;
+  setShowCodeExtractor: (show: boolean) => void;
   addTab: () => void;
+  addFileTab: (title: string, content: string, fileHandle?: any) => void;
   closeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
   updateTabTitle: (id: string, title: string) => void;
+  updateTab: (id: string, data: Partial<TabData>) => void;
 }
 
 export const DUMMY_CONTENT = `# Welcome to the Elite Markdown Editor
@@ -116,21 +126,36 @@ export const useMarkdownStore = create<MarkdownState>((set) => ({
   syncScroll: true,
   formatTrigger: null,
   searchTrigger: null,
+  undoTrigger: null,
+  redoTrigger: null,
   showHelp: false,
   showInfo: false,
+  showCodeExtractor: false,
   setContent: (content) => set((state) => ({
-    tabs: state.tabs.map(tab => tab.id === state.activeTabId ? { ...tab, content } : tab)
+    tabs: state.tabs.map(tab => tab.id === state.activeTabId 
+      ? { ...tab, content, isDirty: tab.content !== content ? true : tab.isDirty } 
+      : tab)
   })),
   setViewMode: (viewMode) => set({ viewMode }),
   setSyncScroll: (syncScroll) => set({ syncScroll }),
   insertTextAtCursor: (payload) => set({ formatTrigger: { timestamp: Date.now(), payload } }),
   triggerSearch: () => set({ searchTrigger: Date.now() }),
+  triggerUndo: () => set({ undoTrigger: Date.now() }),
+  triggerRedo: () => set({ redoTrigger: Date.now() }),
   setShowHelp: (showHelp) => set({ showHelp }),
   setShowInfo: (showInfo) => set({ showInfo }),
+  setShowCodeExtractor: (showCodeExtractor) => set({ showCodeExtractor }),
   addTab: () => set((state) => {
     const newId = Math.random().toString(36).substr(2, 9);
     return {
       tabs: [...state.tabs, { id: newId, title: `Untitled-${state.tabs.length + 1}.md`, content: '' }],
+      activeTabId: newId,
+    };
+  }),
+  addFileTab: (title, content, fileHandle) => set((state) => {
+    const newId = Math.random().toString(36).substr(2, 9);
+    return {
+      tabs: [...state.tabs, { id: newId, title, content, fileHandle, isDirty: false }],
       activeTabId: newId,
     };
   }),
@@ -148,5 +173,8 @@ export const useMarkdownStore = create<MarkdownState>((set) => ({
   setActiveTab: (id) => set({ activeTabId: id }),
   updateTabTitle: (id, title) => set((state) => ({
     tabs: state.tabs.map(tab => tab.id === id ? { ...tab, title } : tab)
+  })),
+  updateTab: (id, data) => set((state) => ({
+    tabs: state.tabs.map(tab => tab.id === id ? { ...tab, ...data } : tab)
   })),
 }));
