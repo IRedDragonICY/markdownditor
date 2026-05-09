@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkGemoji from 'remark-gemoji';
 import rehypeHighlight from 'rehype-highlight';
+import rehypeRaw from 'rehype-raw';
 import { visit } from 'unist-util-visit';
 import { useMarkdownStore } from '../../store/useMarkdownStore';
 import { scrollSync, handlePreviewScroll } from '../../utils/scrollSync';
@@ -122,7 +123,7 @@ export const MarkdownPreview: React.FC = () => {
       <article className="prose max-w-none w-full text-[var(--color-text-main)] prose-headings:text-[var(--color-text-main)] prose-p:text-[var(--color-text-muted)] prose-li:text-[var(--color-text-muted)] prose-strong:text-[var(--color-text-main)] prose-a:text-[var(--color-accent)] prose-headings:border-b-0 prose-h1:border-b prose-h1:border-[var(--color-border)] prose-h1:pb-2 prose-h1:text-3xl prose-h1:font-bold prose-h2:text-xl prose-h2:font-semibold prose-h2:mt-8 prose-h2:mb-4 prose-p:leading-relaxed prose-code:bg-[var(--color-border)] prose-code:px-1 prose-code:rounded prose-code:text-[var(--color-accent)] prose-code:before:content-none prose-code:after:content-none prose-pre:p-0 prose-pre:bg-transparent prose-pre:border-none prose-pre:rounded-none prose-th:border prose-th:border-[var(--color-border)] prose-th:px-4 prose-th:py-2 prose-th:bg-[var(--color-bg-header)] prose-th:text-[var(--color-text-main)] prose-td:border prose-td:border-[var(--color-border)] prose-td:px-4 prose-td:py-2 prose-td:text-sm prose-th:text-sm prose-td:text-[var(--color-text-muted)] prose-blockquote:border-l-4 prose-blockquote:border-[var(--color-border)] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-[var(--color-text-muted)] prose-blockquote:my-4">
         <ReactMarkdown
           remarkPlugins={[remarkGfm, remarkGemoji, remarkGitHubAlerts]}
-          rehypePlugins={[rehypeParseCodeMeta, rehypeHighlight]}
+          rehypePlugins={[rehypeRaw, rehypeParseCodeMeta, rehypeHighlight]}
           components={{
             pre: PreBlock,
             input: ({ node, ...props }) => {

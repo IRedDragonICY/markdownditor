@@ -74,21 +74,70 @@ export const CodeEditor: React.FC = () => {
     const { view } = editorRef.current;
     const { prefix, suffix = '', block = false } = formatTrigger.payload;
     
-    // Perform command injection
     const selection = view.state.selection.main;
     const selectedText = view.state.sliceDoc(selection.from, selection.to);
     
-    if (block) {
-      // For block elements, we might want to ensure we're on a new line
-      const line = view.state.doc.lineAt(selection.from);
-      const insertFrom = line.from;
+    // Check if it's a line-by-line format (lists, blockquotes, alerts)
+    const isLineByLine = prefix === '- ' || prefix === '1. ' || prefix === '> ' || prefix === '- [ ] ' || prefix.startsWith('> [!');
+    
+    if (isLineByLine && selectedText.includes('\n')) {
+      const lines = selectedText.split('\n');
+      
+      let insertStr = '';
+      if (prefix.startsWith('> [!')) {
+        const [alertType, blockPrefix] = prefix.split('\n');
+        insertStr = lines.map((line, i) => i === 0 ? `${alertType}\n${blockPrefix}${line}${suffix}` : `${blockPrefix}${line}${suffix}`).join('\n');
+      } else {
+        insertStr = lines.map((line, i) => {
+          if (prefix === '1. ') {
+            return `${i + 1}. ${line}${suffix}`;
+          }
+          return `${prefix}${line}${suffix}`;
+        }).join('\n');
+      }
+      
+      const lineStart = view.state.doc.lineAt(selection.from).from;
+      const lineEnd = view.state.doc.lineAt(selection.to).to;
+      const fullSelectedText = view.state.sliceDoc(lineStart, lineEnd);
+      
+      let fullInsertStr = '';
+      if (prefix.startsWith('> [!')) {
+        const [alertType, blockPrefix] = prefix.split('\n');
+        fullInsertStr = fullSelectedText.split('\n').map((line, i) => i === 0 ? `${alertType}\n${blockPrefix}${line}${suffix}` : `${blockPrefix}${line}${suffix}`).join('\n');
+      } else {
+        fullInsertStr = fullSelectedText.split('\n').map((line, i) => {
+          if (prefix === '1. ') {
+            return `${i + 1}. ${line}${suffix}`;
+          }
+          return `${prefix}${line}${suffix}`;
+        }).join('\n');
+      }
+      
       view.dispatch({
         changes: {
-          from: insertFrom,
-          to: selection.to,
-          insert: `${prefix}${selectedText || 'text'}${suffix}`
+          from: lineStart,
+          to: lineEnd,
+          insert: fullInsertStr
         },
-        selection: { anchor: insertFrom + prefix.length, head: insertFrom + prefix.length + (selectedText || 'text').length }
+        selection: { anchor: lineStart, head: lineStart + fullInsertStr.length }
+      });
+      view.focus();
+      return;
+    }
+
+    if (block) {
+      // For block elements that wrap the whole section (Code Blocks, Divs)
+      const lineStart = view.state.doc.lineAt(selection.from).from;
+      const lineEnd = view.state.doc.lineAt(selection.to).to;
+      const fullSelectedText = view.state.sliceDoc(lineStart, lineEnd);
+      
+      view.dispatch({
+        changes: {
+          from: lineStart,
+          to: lineEnd,
+          insert: `${prefix}${fullSelectedText || 'text'}${suffix}`
+        },
+        selection: { anchor: lineStart + prefix.length, head: lineStart + prefix.length + (fullSelectedText || 'text').length }
       });
     } else {
       // Inline elements
