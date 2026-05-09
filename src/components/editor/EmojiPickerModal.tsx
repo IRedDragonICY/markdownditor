@@ -43,7 +43,7 @@ export const EmojiPickerModal: React.FC = () => {
   }, [emojis, search]);
 
   const handleInsert = (emoji: GitHubEmoji) => {
-    insertTextAtCursor({ prefix: emoji.markdown, suffix: '' });
+    insertTextAtCursor({ prefix: emoji.markdown, suffix: '', replace: true });
     setShowEmojiPicker(false);
   };
 

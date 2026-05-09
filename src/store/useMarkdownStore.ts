@@ -7,6 +7,8 @@ export type FormatActionPayload = {
   prefix: string;
   suffix?: string;
   block?: boolean;
+  replace?: boolean;
+  isMath?: boolean;
 };
 
 export interface TabData {
@@ -31,6 +33,7 @@ interface MarkdownState {
   showCodeExtractor: boolean;
   showEmojiPicker: boolean;
   showAlertPicker: boolean;
+  showMathPicker: boolean;
   setContent: (content: string) => void;
   setViewMode: (mode: ViewMode) => void;
   setSyncScroll: (sync: boolean) => void;
@@ -43,6 +46,7 @@ interface MarkdownState {
   setShowCodeExtractor: (show: boolean) => void;
   setShowEmojiPicker: (show: boolean) => void;
   setShowAlertPicker: (show: boolean) => void;
+  setShowMathPicker: (show: boolean) => void;
   addTab: () => void;
   addFileTab: (title: string, content: string, fileHandle?: any) => void;
   closeTab: (id: string) => void;
@@ -97,6 +101,55 @@ pub struct AppConfig {
 
 > "Code is like humor. When you have to explain it, it’s bad." – Cory House
 
+### Math Equations (LaTeX)
+
+Math is fully supported using KaTeX. Use \`$\` for inline equations and \`$$\` for block equations.
+
+#### Basic & Algebra
+The quadratic formula:
+$$
+x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+$$
+
+#### Calculus
+Definite integrals and limits:
+$$
+\lim_{x \to \infty} \exp(-x) = 0
+$$
+
+$$
+\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+$$
+
+#### Matrices 
+System of equations represented as a matrix:
+$$
+\begin{bmatrix}
+1 & 2 & 3 \\
+4 & 5 & 6 \\
+7 & 8 & 9
+\end{bmatrix}
+\begin{bmatrix} x \\ y \\ z \end{bmatrix}
+=
+\begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}
+$$
+
+#### Statistics & Probability
+Normal distribution standard equation:
+$$
+f(x) = \frac{1}{\sigma \sqrt{2\pi}} e^{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2}
+$$
+
+#### Sums & Products
+$$
+\sum_{i=1}^{n} i = \frac{n(n+1)}{2} \quad \text{and} \quad \prod_{i=1}^{n} i = n!
+$$
+
+#### Logic & Set Theory
+$$
+\forall x \in \mathbb{R}, \exists y \in \mathbb{R} \text{ such that } y > x \implies A \subset B \cup C
+$$
+
 ### Alerts (GitHub Flavored)
 
 > [!NOTE]
@@ -140,6 +193,7 @@ export const useMarkdownStore = create<MarkdownState>()(
       showCodeExtractor: false,
       showEmojiPicker: false,
       showAlertPicker: false,
+      showMathPicker: false,
       setContent: (content) => set((state) => ({
         tabs: state.tabs.map(tab => tab.id === state.activeTabId 
           ? { ...tab, content, isDirty: tab.content !== content ? true : tab.isDirty } 
@@ -156,6 +210,7 @@ export const useMarkdownStore = create<MarkdownState>()(
       setShowCodeExtractor: (showCodeExtractor) => set({ showCodeExtractor }),
       setShowEmojiPicker: (showEmojiPicker) => set({ showEmojiPicker }),
       setShowAlertPicker: (showAlertPicker) => set({ showAlertPicker }),
+      setShowMathPicker: (showMathPicker) => set({ showMathPicker }),
       addTab: () => set((state) => {
         const newId = Math.random().toString(36).substr(2, 9);
         return {

@@ -16,6 +16,7 @@ import { CodeExtractorModal } from './components/preview/CodeExtractorModal';
 import { SettingsModal } from './components/layout/SettingsModal';
 import { EmojiPickerModal } from './components/editor/EmojiPickerModal';
 import { AlertPickerModal } from './components/editor/AlertPickerModal';
+import { MathPickerModal } from './components/editor/MathPickerModal';
 import { saveFile, saveFileAs } from './utils/fileSystem';
 
 const InfoModal = () => {
@@ -208,6 +209,7 @@ export default function App() {
       <SettingsModal />
       <EmojiPickerModal />
       <AlertPickerModal />
+      <MathPickerModal />
     </div>
   );
 }

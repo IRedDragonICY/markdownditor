@@ -72,44 +72,71 @@ export const CodeEditor: React.FC = () => {
     if (!formatTrigger || !editorRef.current?.view) return;
 
     const { view } = editorRef.current;
-    const { prefix, suffix = '', block = false } = formatTrigger.payload;
+    const { prefix, suffix = '', block = false, replace = false, isMath = false } = formatTrigger.payload;
     
     const selection = view.state.selection.main;
     const selectedText = view.state.sliceDoc(selection.from, selection.to);
-    
-    // Check if it's a line-by-line format (lists, blockquotes, alerts)
-    const isLineByLine = prefix === '- ' || prefix === '1. ' || prefix === '> ' || prefix === '- [ ] ' || prefix.startsWith('> [!');
-    
-    if (isLineByLine && selectedText.includes('\n')) {
-      const lines = selectedText.split('\n');
+
+    let finalPrefix = prefix;
+    let finalSuffix = suffix;
+
+    if (isMath) {
+      const fullDoc = view.state.doc.toString();
+      const textBefore = fullDoc.slice(0, selection.from);
       
-      let insertStr = '';
-      if (prefix.startsWith('> [!')) {
-        const [alertType, blockPrefix] = prefix.split('\n');
-        insertStr = lines.map((line, i) => i === 0 ? `${alertType}\n${blockPrefix}${line}${suffix}` : `${blockPrefix}${line}${suffix}`).join('\n');
-      } else {
-        insertStr = lines.map((line, i) => {
-          if (prefix === '1. ') {
-            return `${i + 1}. ${line}${suffix}`;
-          }
-          return `${prefix}${line}${suffix}`;
-        }).join('\n');
+      let totalDoubleBefore = (textBefore.match(/(?<!\\)\$\$/g) || []).length;
+      
+      const currentLineTextBefore = textBefore.split('\n').pop() || '';
+      const stringWithoutDouble = currentLineTextBefore.replace(/(?<!\\)\$\$/g, '');
+      let currentLineSingleBefore = (stringWithoutDouble.match(/(?<!\\)\$/g) || []).length;
+
+      const inMath = totalDoubleBefore % 2 !== 0 || currentLineSingleBefore % 2 !== 0;
+
+      if (!inMath) {
+        if (block) {
+          finalPrefix = `$$\n${prefix}`;
+          finalSuffix = `${suffix}\n$$`;
+        } else {
+          finalPrefix = `$${prefix}`;
+          finalSuffix = `${suffix}$`;
+        }
       }
-      
+    }
+
+    if (replace) {
+      view.dispatch({
+        changes: {
+          from: selection.from,
+          to: selection.to,
+          insert: finalPrefix
+        },
+        // Put cursor after inserted template
+        selection: { anchor: selection.from + finalPrefix.length, head: selection.from + finalPrefix.length }
+      });
+      view.focus();
+      return;
+    }
+    
+    const isLineByLine = block && !finalSuffix && !isMath;
+    
+    if (isLineByLine) {
       const lineStart = view.state.doc.lineAt(selection.from).from;
       const lineEnd = view.state.doc.lineAt(selection.to).to;
       const fullSelectedText = view.state.sliceDoc(lineStart, lineEnd);
       
       let fullInsertStr = '';
-      if (prefix.startsWith('> [!')) {
-        const [alertType, blockPrefix] = prefix.split('\n');
-        fullInsertStr = fullSelectedText.split('\n').map((line, i) => i === 0 ? `${alertType}\n${blockPrefix}${line}${suffix}` : `${blockPrefix}${line}${suffix}`).join('\n');
+      if (finalPrefix.includes('\n')) {
+        const parts = finalPrefix.split('\n');
+        const firstLinePrefix = finalPrefix;
+        const restLinePrefix = parts[parts.length - 1]; // E.g., "> " from "> [!NOTE]\n> "
+        
+        fullInsertStr = fullSelectedText.split('\n').map((line, i) => i === 0 ? `${firstLinePrefix}${line}` : `${restLinePrefix}${line}`).join('\n');
       } else {
         fullInsertStr = fullSelectedText.split('\n').map((line, i) => {
-          if (prefix === '1. ') {
-            return `${i + 1}. ${line}${suffix}`;
+          if (finalPrefix === '1. ') {
+            return `${i + 1}. ${line}`;
           }
-          return `${prefix}${line}${suffix}`;
+          return `${finalPrefix}${line}`;
         }).join('\n');
       }
       
@@ -125,29 +152,33 @@ export const CodeEditor: React.FC = () => {
       return;
     }
 
-    if (block) {
+    if (block && !isMath) {
       // For block elements that wrap the whole section (Code Blocks, Divs)
       const lineStart = view.state.doc.lineAt(selection.from).from;
       const lineEnd = view.state.doc.lineAt(selection.to).to;
       const fullSelectedText = view.state.sliceDoc(lineStart, lineEnd);
       
+      const insertContent = fullSelectedText ? `${finalPrefix}${fullSelectedText}${finalSuffix}` : (finalSuffix ? `${finalPrefix}text${finalSuffix}` : `${finalPrefix}`);
+      
       view.dispatch({
         changes: {
           from: lineStart,
           to: lineEnd,
-          insert: `${prefix}${fullSelectedText || 'text'}${suffix}`
+          insert: insertContent
         },
-        selection: { anchor: lineStart + prefix.length, head: lineStart + prefix.length + (fullSelectedText || 'text').length }
+        selection: { anchor: lineStart + finalPrefix.length, head: lineStart + finalPrefix.length + (fullSelectedText ? fullSelectedText.length : (finalSuffix ? 4 : 0)) }
       });
     } else {
       // Inline elements
+      const insertContent = selectedText ? `${finalPrefix}${selectedText}${finalSuffix}` : (finalSuffix ? `${finalPrefix}text${finalSuffix}` : `${finalPrefix}`);
+
       view.dispatch({
         changes: {
           from: selection.from,
           to: selection.to,
-          insert: `${prefix}${selectedText || 'text'}${suffix}`
+          insert: insertContent
         },
-        selection: { anchor: selection.from + prefix.length, head: selection.from + prefix.length + (selectedText || 'text').length }
+        selection: { anchor: selection.from + finalPrefix.length, head: selection.from + finalPrefix.length + (selectedText ? selectedText.length : (finalSuffix ? 4 : 0)) }
       });
     }
     view.focus();

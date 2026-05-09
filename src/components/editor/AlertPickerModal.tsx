@@ -53,7 +53,7 @@ export const AlertPickerModal: React.FC = () => {
   const [selectedAlert, setSelectedAlert] = useState<GitHubAlert | null>(null);
 
   const handleInsert = (alert: GitHubAlert) => {
-    insertTextAtCursor({ prefix: alert.markdown, suffix: '' });
+    insertTextAtCursor({ prefix: alert.markdown, suffix: '', block: true });
     setShowAlertPicker(false);
   };
 
