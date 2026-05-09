@@ -158,7 +158,7 @@ export const CodeEditor: React.FC = () => {
       const lineEnd = view.state.doc.lineAt(selection.to).to;
       const fullSelectedText = view.state.sliceDoc(lineStart, lineEnd);
       
-      const insertContent = fullSelectedText ? `${finalPrefix}${fullSelectedText}${finalSuffix}` : (finalSuffix ? `${finalPrefix}text${finalSuffix}` : `${finalPrefix}`);
+      const insertContent = fullSelectedText ? `${finalPrefix}${fullSelectedText}${finalSuffix}` : (suffix ? `${finalPrefix}text${finalSuffix}` : `${finalPrefix}${finalSuffix}`);
       
       view.dispatch({
         changes: {
@@ -166,11 +166,11 @@ export const CodeEditor: React.FC = () => {
           to: lineEnd,
           insert: insertContent
         },
-        selection: { anchor: lineStart + finalPrefix.length, head: lineStart + finalPrefix.length + (fullSelectedText ? fullSelectedText.length : (finalSuffix ? 4 : 0)) }
+        selection: { anchor: lineStart + finalPrefix.length, head: lineStart + finalPrefix.length + (fullSelectedText ? fullSelectedText.length : (suffix ? 4 : 0)) }
       });
     } else {
       // Inline elements
-      const insertContent = selectedText ? `${finalPrefix}${selectedText}${finalSuffix}` : (finalSuffix ? `${finalPrefix}text${finalSuffix}` : `${finalPrefix}`);
+      const insertContent = selectedText ? `${finalPrefix}${selectedText}${finalSuffix}` : (suffix ? `${finalPrefix}text${finalSuffix}` : `${finalPrefix}${finalSuffix}`);
 
       view.dispatch({
         changes: {
@@ -178,7 +178,7 @@ export const CodeEditor: React.FC = () => {
           to: selection.to,
           insert: insertContent
         },
-        selection: { anchor: selection.from + finalPrefix.length, head: selection.from + finalPrefix.length + (selectedText ? selectedText.length : (finalSuffix ? 4 : 0)) }
+        selection: { anchor: selection.from + finalPrefix.length, head: selection.from + finalPrefix.length + (selectedText ? selectedText.length : (suffix ? 4 : 0)) }
       });
     }
     view.focus();

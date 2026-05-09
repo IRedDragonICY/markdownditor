@@ -11,7 +11,8 @@ import {
   Clock, Smile, Copyright, MessageSquareWarning, Sigma,
   Maximize, Search, HelpCircle, Info, Archive, Save, FolderOpen,
   PieChart, LineChart, BarChart3, Activity, GitBranch, GitMerge, GitCommit, Settings,
-  Calculator, Superscript, Subscript, FunctionSquare, LayoutTemplate, Share2
+  Calculator, Superscript, Subscript, FunctionSquare, LayoutTemplate, Share2,
+  Keyboard, AtSign, Hash, ChevronDown, ListEnd
 } from 'lucide-react';
 import { MathStructureDropdown } from './MathStructureDropdown';
 import {
@@ -193,6 +194,16 @@ export const EditorToolbar: React.FC = () => {
             <ToolbarButton icon={<Smile className="w-4 h-4" />} label="Emoji" onClick={() => useMarkdownStore.getState().setShowEmojiPicker(true)} />
             <ToolbarButton icon={<Copyright className="w-4 h-4" />} label="Copyright" onClick={() => handleFormat('©', '', false, true)} />
             <ToolbarButton icon={<MessageSquareWarning className="w-4 h-4" />} label="Markdown Alert" onClick={() => useMarkdownStore.getState().setShowAlertPicker(true)} />
+            
+            <div className="h-4 w-[1px] bg-[var(--color-border)] mx-1 shrink-0" />
+            
+            <ToolbarButton icon={<Subscript className="w-4 h-4" />} label="Subscript" onClick={() => handleFormat('<sub>', '</sub>')} />
+            <ToolbarButton icon={<Superscript className="w-4 h-4" />} label="Superscript" onClick={() => handleFormat('<sup>', '</sup>')} />
+            <ToolbarButton icon={<Keyboard className="w-4 h-4" />} label="Keyboard Key" onClick={() => handleFormat('<kbd>', '</kbd>')} />
+            <ToolbarButton icon={<ListEnd className="w-4 h-4" />} label="Footnote" onClick={() => handleFormat('[^1]\n\n[^1]: ', '')} />
+            <ToolbarButton icon={<ChevronDown className="w-4 h-4" />} label="Collapsible Section" onClick={() => handleFormat('<details>\n<summary>Details</summary>\n\n', '\n</details>', true)} />
+            <ToolbarButton icon={<AtSign className="w-4 h-4" />} label="Mention" onClick={() => handleFormat('@', '')} />
+            <ToolbarButton icon={<Hash className="w-4 h-4" />} label="Issue/Pull Request" onClick={() => handleFormat('#', '')} />
           </>
         )}
 
