@@ -144,9 +144,9 @@ export const EditorToolbar: React.FC = () => {
       <div className="h-4 w-[1px] bg-[var(--color-border)] mx-1 shrink-0" />
       
       <ToolbarButton icon={<Clock className="w-4 h-4" />} label="Insert Time" onClick={() => handleFormat(new Date().toLocaleString(), '')} />
-      <ToolbarButton icon={<Smile className="w-4 h-4" />} label="Emoji" onClick={() => handleFormat('😊', '')} />
+      <ToolbarButton icon={<Smile className="w-4 h-4" />} label="Emoji" onClick={() => useMarkdownStore.getState().setShowEmojiPicker(true)} />
       <ToolbarButton icon={<Copyright className="w-4 h-4" />} label="Copyright" onClick={() => handleFormat('©', '')} />
-      <ToolbarButton icon={<MessageSquareWarning className="w-4 h-4" />} label="Markdown Alert" onClick={() => handleFormat('> [!NOTE]\n> ', '', true)} />
+      <ToolbarButton icon={<MessageSquareWarning className="w-4 h-4" />} label="Markdown Alert" onClick={() => useMarkdownStore.getState().setShowAlertPicker(true)} />
 
       <div className="flex-1 min-w-[20px]" />
       <div className="h-4 w-[1px] bg-[var(--color-border)] mx-1 shrink-0" />

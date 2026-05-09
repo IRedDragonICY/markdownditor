@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export type ViewMode = 'split' | 'editor' | 'preview';
 
@@ -28,6 +29,8 @@ interface MarkdownState {
   showHelp: boolean;
   showInfo: boolean;
   showCodeExtractor: boolean;
+  showEmojiPicker: boolean;
+  showAlertPicker: boolean;
   setContent: (content: string) => void;
   setViewMode: (mode: ViewMode) => void;
   setSyncScroll: (sync: boolean) => void;
@@ -38,6 +41,8 @@ interface MarkdownState {
   setShowHelp: (show: boolean) => void;
   setShowInfo: (show: boolean) => void;
   setShowCodeExtractor: (show: boolean) => void;
+  setShowEmojiPicker: (show: boolean) => void;
+  setShowAlertPicker: (show: boolean) => void;
   addTab: () => void;
   addFileTab: (title: string, content: string, fileHandle?: any) => void;
   closeTab: (id: string) => void;
@@ -119,62 +124,79 @@ pub struct AppConfig {
 
 Enjoy writing your markdown!`;
 
-export const useMarkdownStore = create<MarkdownState>((set) => ({
-  tabs: [{ id: '1', title: 'welcome.md', content: DUMMY_CONTENT }],
-  activeTabId: '1',
-  viewMode: 'split',
-  syncScroll: true,
-  formatTrigger: null,
-  searchTrigger: null,
-  undoTrigger: null,
-  redoTrigger: null,
-  showHelp: false,
-  showInfo: false,
-  showCodeExtractor: false,
-  setContent: (content) => set((state) => ({
-    tabs: state.tabs.map(tab => tab.id === state.activeTabId 
-      ? { ...tab, content, isDirty: tab.content !== content ? true : tab.isDirty } 
-      : tab)
-  })),
-  setViewMode: (viewMode) => set({ viewMode }),
-  setSyncScroll: (syncScroll) => set({ syncScroll }),
-  insertTextAtCursor: (payload) => set({ formatTrigger: { timestamp: Date.now(), payload } }),
-  triggerSearch: () => set({ searchTrigger: Date.now() }),
-  triggerUndo: () => set({ undoTrigger: Date.now() }),
-  triggerRedo: () => set({ redoTrigger: Date.now() }),
-  setShowHelp: (showHelp) => set({ showHelp }),
-  setShowInfo: (showInfo) => set({ showInfo }),
-  setShowCodeExtractor: (showCodeExtractor) => set({ showCodeExtractor }),
-  addTab: () => set((state) => {
-    const newId = Math.random().toString(36).substr(2, 9);
-    return {
-      tabs: [...state.tabs, { id: newId, title: `Untitled-${state.tabs.length + 1}.md`, content: '' }],
-      activeTabId: newId,
-    };
-  }),
-  addFileTab: (title, content, fileHandle) => set((state) => {
-    const newId = Math.random().toString(36).substr(2, 9);
-    return {
-      tabs: [...state.tabs, { id: newId, title, content, fileHandle, isDirty: false }],
-      activeTabId: newId,
-    };
-  }),
-  closeTab: (id) => set((state) => {
-    const newTabs = state.tabs.filter(t => t.id !== id);
-    if (newTabs.length === 0) {
-      const newId = Math.random().toString(36).substr(2, 9);
-      newTabs.push({ id: newId, title: 'Untitled-1.md', content: '' });
+export const useMarkdownStore = create<MarkdownState>()(
+  persist(
+    (set) => ({
+      tabs: [{ id: '1', title: 'welcome.md', content: DUMMY_CONTENT }],
+      activeTabId: '1',
+      viewMode: 'split',
+      syncScroll: true,
+      formatTrigger: null,
+      searchTrigger: null,
+      undoTrigger: null,
+      redoTrigger: null,
+      showHelp: false,
+      showInfo: false,
+      showCodeExtractor: false,
+      showEmojiPicker: false,
+      showAlertPicker: false,
+      setContent: (content) => set((state) => ({
+        tabs: state.tabs.map(tab => tab.id === state.activeTabId 
+          ? { ...tab, content, isDirty: tab.content !== content ? true : tab.isDirty } 
+          : tab)
+      })),
+      setViewMode: (viewMode) => set({ viewMode }),
+      setSyncScroll: (syncScroll) => set({ syncScroll }),
+      insertTextAtCursor: (payload) => set({ formatTrigger: { timestamp: Date.now(), payload } }),
+      triggerSearch: () => set({ searchTrigger: Date.now() }),
+      triggerUndo: () => set({ undoTrigger: Date.now() }),
+      triggerRedo: () => set({ redoTrigger: Date.now() }),
+      setShowHelp: (showHelp) => set({ showHelp }),
+      setShowInfo: (showInfo) => set({ showInfo }),
+      setShowCodeExtractor: (showCodeExtractor) => set({ showCodeExtractor }),
+      setShowEmojiPicker: (showEmojiPicker) => set({ showEmojiPicker }),
+      setShowAlertPicker: (showAlertPicker) => set({ showAlertPicker }),
+      addTab: () => set((state) => {
+        const newId = Math.random().toString(36).substr(2, 9);
+        return {
+          tabs: [...state.tabs, { id: newId, title: `Untitled-${state.tabs.length + 1}.md`, content: '' }],
+          activeTabId: newId,
+        };
+      }),
+      addFileTab: (title, content, fileHandle) => set((state) => {
+        const newId = Math.random().toString(36).substr(2, 9);
+        return {
+          tabs: [...state.tabs, { id: newId, title, content, fileHandle, isDirty: false }],
+          activeTabId: newId,
+        };
+      }),
+      closeTab: (id) => set((state) => {
+        const newTabs = state.tabs.filter(t => t.id !== id);
+        if (newTabs.length === 0) {
+          const newId = Math.random().toString(36).substr(2, 9);
+          newTabs.push({ id: newId, title: 'Untitled-1.md', content: '' });
+        }
+        return {
+          tabs: newTabs,
+          activeTabId: state.activeTabId === id ? newTabs[newTabs.length - 1].id : state.activeTabId,
+        };
+      }),
+      setActiveTab: (id) => set({ activeTabId: id }),
+      updateTabTitle: (id, title) => set((state) => ({
+        tabs: state.tabs.map(tab => tab.id === id ? { ...tab, title } : tab)
+      })),
+      updateTab: (id, data) => set((state) => ({
+        tabs: state.tabs.map(tab => tab.id === id ? { ...tab, ...data } : tab)
+      })),
+    }),
+    {
+      name: 'markdown-editor-storage',
+      partialize: (state) => ({
+        tabs: state.tabs.map(t => ({ ...t, fileHandle: undefined })), // Don't persist file handles
+        activeTabId: state.activeTabId,
+        viewMode: state.viewMode,
+        syncScroll: state.syncScroll,
+      }),
     }
-    return {
-      tabs: newTabs,
-      activeTabId: state.activeTabId === id ? newTabs[newTabs.length - 1].id : state.activeTabId,
-    };
-  }),
-  setActiveTab: (id) => set({ activeTabId: id }),
-  updateTabTitle: (id, title) => set((state) => ({
-    tabs: state.tabs.map(tab => tab.id === id ? { ...tab, title } : tab)
-  })),
-  updateTab: (id, data) => set((state) => ({
-    tabs: state.tabs.map(tab => tab.id === id ? { ...tab, ...data } : tab)
-  })),
-}));
+  )
+);

@@ -14,6 +14,8 @@ import { CodeEditor } from './components/editor/CodeEditor';
 import { MarkdownPreview } from './components/preview/MarkdownPreview';
 import { CodeExtractorModal } from './components/preview/CodeExtractorModal';
 import { SettingsModal } from './components/layout/SettingsModal';
+import { EmojiPickerModal } from './components/editor/EmojiPickerModal';
+import { AlertPickerModal } from './components/editor/AlertPickerModal';
 import { saveFile, saveFileAs } from './utils/fileSystem';
 
 const InfoModal = () => {
@@ -204,6 +206,8 @@ export default function App() {
       <InfoModal />
       <CodeExtractorModal />
       <SettingsModal />
+      <EmojiPickerModal />
+      <AlertPickerModal />
     </div>
   );
 }
