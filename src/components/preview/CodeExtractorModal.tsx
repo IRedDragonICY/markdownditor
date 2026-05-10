@@ -71,6 +71,22 @@ export const CodeExtractorModal: React.FC = () => {
         }
       }
 
+      // Attempt to find filename in the preceding lines (e.g. ### `app/src/main/.../File.kt`)
+      if (!filenameInfo) {
+        const textBefore = content.substring(0, match.index);
+        const linesBefore = textBefore.trimEnd().split(/\r?\n/);
+        // Look at the last non-empty line before the code block
+        const lastLineIndex = linesBefore.length - 1;
+        if (lastLineIndex >= 0) {
+          const lastLine = linesBefore[lastLineIndex].trim();
+          // Extract potential file path: some path with at least a dot and an extension
+          const pathMatch = lastLine.match(/([a-zA-Z0-9_\-\.\/]+\.[a-zA-Z0-9]+)/);
+          if (pathMatch && lastLine.length < 200) { 
+            filenameInfo = pathMatch[1];
+          }
+        }
+      }
+
       const pathInfo = filenameInfo || `${language}-block-${index}.${getFileExtension(language)}`;
       const filename = pathInfo.split('/').pop() || pathInfo;
 

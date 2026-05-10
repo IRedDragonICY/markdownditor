@@ -81,6 +81,10 @@ export const EditorToolbar: React.FC = () => {
     if (!activeTab) return;
     try {
       if (saveAs || !activeTab.fileHandle) {
+        if (!('showSaveFilePicker' in window)) {
+          updateTab(activeTab.id, { isDirty: false });
+          return;
+        }
         const result = await saveFileAs(activeTab.content, activeTab.title);
         if (result) {
           updateTab(activeTab.id, { 
@@ -93,7 +97,12 @@ export const EditorToolbar: React.FC = () => {
         await saveFile(activeTab.fileHandle, activeTab.content);
         updateTab(activeTab.id, { isDirty: false });
       }
-    } catch (e) {
+    } catch (e: any) {
+      if (e.message?.includes('not supported')) {
+        updateTab(activeTab.id, { isDirty: false });
+        // It failed because of no File System permissions, we just mark it clean since we have a download button in the header now
+        return;
+      }
       console.error(e);
       alert('Failed to save file');
     }

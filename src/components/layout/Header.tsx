@@ -1,7 +1,8 @@
 import React from 'react';
 import { useMarkdownStore } from '../../store/useMarkdownStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
-import { Maximize2, Settings, ArrowDownUp } from 'lucide-react';
+import { Maximize2, Settings, ArrowDownUp, Download } from 'lucide-react';
+import { downloadFile } from '../../utils/fileSystem';
 
 export const Header: React.FC = () => {
   const { tabs, activeTabId, viewMode, setViewMode, syncScroll, setSyncScroll } = useMarkdownStore();
@@ -13,6 +14,12 @@ export const Header: React.FC = () => {
   const words = content.trim() ? content.trim().split(/\s+/).length : 0;
   const chars = content.length;
   const readTime = Math.max(1, Math.ceil(words / 200));
+
+  const handleDownload = () => {
+    if (activeTab) {
+      downloadFile(activeTab.content, activeTab.title);
+    }
+  };
 
   return (
     <header className="h-12 border-b border-[var(--color-border)] bg-[var(--color-bg-header)] flex items-center px-4 justify-between shrink-0">
@@ -73,6 +80,9 @@ export const Header: React.FC = () => {
         </div>
         <button className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-hover)] rounded-md transition-colors" title="Toggle Fullscreen">
           <Maximize2 className="w-4 h-4" />
+        </button>
+        <button className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-hover)] rounded-md transition-colors" title="Download File" onClick={handleDownload} disabled={!activeTab}>
+          <Download className="w-4 h-4" />
         </button>
         <button className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-hover)] rounded-md transition-colors" title="Settings" onClick={() => setShowSettings(true)}>
           <Settings className="w-4 h-4" />

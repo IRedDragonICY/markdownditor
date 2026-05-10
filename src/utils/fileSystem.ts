@@ -72,6 +72,16 @@ export interface SaveFileResult {
   handle: any;
 }
 
+export const downloadFile = (content: string, filename: string) => {
+  const blob = new Blob([content], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
 export const saveFileAs = async (content: string, defaultName: string): Promise<SaveFileResult | null> => {
   if ('showSaveFilePicker' in window) {
     try {
@@ -100,13 +110,6 @@ export const saveFileAs = async (content: string, defaultName: string): Promise<
     }
   } else {
     // Fallback for non-supported browsers
-    const blob = new Blob([content], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = defaultName;
-    a.click();
-    URL.revokeObjectURL(url);
-    return { name: defaultName, handle: null };
+    throw new Error('File System Access API not supported');
   }
 };
